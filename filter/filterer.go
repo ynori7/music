@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"time"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/ynori7/MusicNewReleases/config"
 	"github.com/ynori7/MusicNewReleases/music"
 )
 
-const WorkerCount = 3
+const WorkerCount = 4
 
 type Filterer struct {
 	conf              config.Config
@@ -23,6 +24,8 @@ func NewFilterer(conf config.Config, releases music.NewReleases) Filterer {
 }
 
 func (f Filterer) FilterAndEnrich() []music.Discography {
+	logger := log.WithFields(log.Fields{"Logger": "FilterAndEnrich"})
+
 	resultsChan := make(chan music.Discography, WorkerCount)
 	errorChan := make(chan error, WorkerCount)
 
@@ -39,15 +42,15 @@ func (f Filterer) FilterAndEnrich() []music.Discography {
 		i = (i + 1) % WorkerCount
 	}
 
-	discogs := make([]music.Discography, 0)
+	discographies := make([]music.Discography, 0)
 
 	for i := 0; i < len(f.potentialReleases); i++ {
 		select {
 		case r := <-resultsChan:
-			fmt.Println("Found interesting artist: ", r.Artist.Name)
-			discogs = append(discogs, r)
+			logger.WithFields(log.Fields{"Artist": r.Artist.Name}).Debug("Found interesting artist")
+			discographies = append(discographies, r)
 		case err := <-errorChan:
-			fmt.Println(err)
+			logger.WithFields(log.Fields{"error": err}).Info("Filtered an artist")
 		}
 	}
 
@@ -55,7 +58,7 @@ func (f Filterer) FilterAndEnrich() []music.Discography {
 		close(worker)
 	}
 
-	return discogs
+	return discographies
 }
 
 func (f Filterer) enrichAndFilterWorker(successes chan music.Discography, errors chan error, jobs chan string) {
@@ -76,7 +79,7 @@ func (f Filterer) enrichAndFilterWorker(successes chan music.Discography, errors
 			continue
 		}
 
-		latestAlbum := discography.Albums[len(discography.Albums) - 1]
+		latestAlbum := discography.Albums[len(discography.Albums)-1]
 		if latestAlbum.Year != "" && latestAlbum.Year != fmt.Sprintf("%d", time.Now().Year()) {
 			errors <- fmt.Errorf("newest album is not from this year") //this can happen when the newest album was a collaboration
 			continue

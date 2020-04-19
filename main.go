@@ -2,34 +2,40 @@ package main
 
 import (
 	"fmt"
-	"github.com/ynori7/MusicNewReleases/filter"
 	"io/ioutil"
-	"log"
 	"os"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/ynori7/MusicNewReleases/config"
+	"github.com/ynori7/MusicNewReleases/filter"
 	"github.com/ynori7/MusicNewReleases/music"
 )
 
 func main() {
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp: true,
+	})
+	log.SetLevel(log.DebugLevel)
+	logger := log.WithFields(log.Fields{"Logger": "main"})
+
 	if len(os.Args) < 2 {
-		//log.Fatal(errors.New("you must specify the path to the config file"))
+		logger.Fatal("You must specify the path to the config file")
 	}
 
 	//Get the config
-	data, err := ioutil.ReadFile("config.yml")//os.Args[1])
+	data, err := ioutil.ReadFile(os.Args[1])
 	if err != nil {
-		log.Fatal(err)
+		logger.WithFields(log.Fields{"error": err}).Fatal("Error reading config file")
 	}
 
 	var conf config.Config
 	if err := conf.Parse(data); err != nil {
-		log.Fatal(err)
+		logger.WithFields(log.Fields{"error": err}).Fatal("Error parsing config")
 	}
 
 	newReleases, err := music.GetPotentiallyInterestingNewReleases(conf)
 	if err != nil {
-		log.Fatal(err)
+		logger.WithFields(log.Fields{"error": err}).Fatal("Error fetching new releases")
 	}
 
 	filterer := filter.NewFilterer(conf, newReleases)
