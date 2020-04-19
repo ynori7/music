@@ -51,7 +51,7 @@ func main() {
 	}
 
 	//Save HTML output to file
-	err = ioutil.WriteFile("test.html", []byte(out), 0644)
+	err = ioutil.WriteFile("10-04-2020.html", []byte(out), 0644)
 	if err != nil {
 		logger.WithFields(log.Fields{"error": err}).Fatal("Error saving html to file")
 	}
