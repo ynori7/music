@@ -19,6 +19,8 @@ type Discography struct {
 	Albums        []Album
 	AverageRating int
 	BestRating    int
+	NewestRelease Album
+	Score int //This is a score based on the various ratings available
 }
 
 type NewReleases []string

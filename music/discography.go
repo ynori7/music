@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -40,6 +41,7 @@ func GetArtistDiscography(link string) (*Discography, error) {
 		}
 	})
 
+	//Scan the discography
 	ratingCount := 0
 	ratingSum := 0
 	doc.Find(".discography tr").Each(func(i int, s *goquery.Selection) {
@@ -61,7 +63,7 @@ func GetArtistDiscography(link string) (*Discography, error) {
 
 		album.Year = strings.TrimSpace(s.Find("td.year").Text())
 
-		album.Rating = GetEditorRating(s.Find("td.all-rating"))
+		album.Rating = getEditorRating(s.Find("td.all-rating"))
 
 		if album.Rating > discography.BestRating {
 			discography.BestRating = album.Rating
@@ -74,14 +76,25 @@ func GetArtistDiscography(link string) (*Discography, error) {
 		discography.Albums = append(discography.Albums, album)
 	})
 
-	if ratingCount > 0 {
-		discography.AverageRating = int(math.RoundToEven(float64(ratingSum) / float64(ratingCount)))
+	//find newest release by iterating the list backwards.
+	discography.NewestRelease = discography.Albums[len(discography.Albums)-1] // Sometimes the newest album won't have a year yet, so we use the last item by default
+	for i := len(discography.Albums) - 1; i >= 0; i-- {
+		if discography.Albums[i].Year == fmt.Sprintf("%d", time.Now().Year()) {
+			discography.NewestRelease = discography.Albums[i]
+			break
+		}
 	}
+
+	//Set average rating and calculate score
+	if ratingCount > 0 {
+		discography.AverageRating = getAverage(ratingSum, ratingCount)
+	}
+	discography.Score = calculateScore(discography.BestRating, discography.AverageRating, ratingCount, discography.NewestRelease.Rating)
 
 	return discography, nil
 }
 
-func GetEditorRating(s *goquery.Selection) int {
+func getEditorRating(s *goquery.Selection) int {
 	ratingVal, _ := s.Attr("data-sort-value")
 	ratingInt := 0
 	if len(ratingVal) > 0 {
@@ -91,4 +104,27 @@ func GetEditorRating(s *goquery.Selection) int {
 		}
 	}
 	return ratingInt
+}
+
+func calculateScore(bestRating, averageRating, ratingCount, newestAlbumRating int) int {
+	score := bestRating * 4 //a third of the score is from the best rating (gives some extra weight to the average)
+	score += averageRating * 4 //another third is from the average rating
+
+	if newestAlbumRating != 0 {
+		score = getAverage((newestAlbumRating * 8) + score, 2) //average the newest rating with the current score to weight based on the new album
+	}
+
+	//add a little extra weight based on the total number of ratings there were
+	switch {
+	case ratingCount > 7: score += 20
+	case ratingCount > 5: score += 15
+	case ratingCount > 2: score += 10
+	case ratingCount > 1: score += 5
+	}
+
+	return score
+}
+
+func getAverage(sum, count int) int {
+	return int(math.RoundToEven(float64(sum) / float64(count)))
 }

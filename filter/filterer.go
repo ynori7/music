@@ -2,6 +2,7 @@ package filter
 
 import (
 	"fmt"
+	"sort"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -29,21 +30,22 @@ func (f Filterer) FilterAndEnrich() []music.Discography {
 	resultsChan := make(chan music.Discography, WorkerCount)
 	errorChan := make(chan error, WorkerCount)
 
+	//Spawn workers to process in parallel
 	workers := make([]chan string, WorkerCount)
 	for i := 0; i < WorkerCount; i++ {
 		workers[i] = make(chan string, len(f.potentialReleases)/WorkerCount)
 		go f.enrichAndFilterWorker(resultsChan, errorChan, workers[i])
 	}
 
-	// Each worker will process an equal number of releases
+	//Assign an equal number of releases to be checked by each worker
 	var i = 0
 	for _, s := range f.potentialReleases {
 		workers[i] <- s
 		i = (i + 1) % WorkerCount
 	}
 
+	//Process results
 	discographies := make([]music.Discography, 0)
-
 	for i := 0; i < len(f.potentialReleases); i++ {
 		select {
 		case r := <-resultsChan:
@@ -54,6 +56,12 @@ func (f Filterer) FilterAndEnrich() []music.Discography {
 		}
 	}
 
+	//Sort the results
+	sort.Slice(discographies, func(i, j int) bool {
+		return discographies[i].Score > discographies[j].Score
+	})
+
+	//Signal workers to stop working
 	for _, worker := range workers {
 		close(worker)
 	}
@@ -79,8 +87,7 @@ func (f Filterer) enrichAndFilterWorker(successes chan music.Discography, errors
 			continue
 		}
 
-		latestAlbum := discography.Albums[len(discography.Albums)-1]
-		if latestAlbum.Year != "" && latestAlbum.Year != fmt.Sprintf("%d", time.Now().Year()) {
+		if discography.NewestRelease.Year != "" && discography.NewestRelease.Year != fmt.Sprintf("%d", time.Now().Year()) {
 			errors <- fmt.Errorf("newest album is not from this year") //this can happen when the newest album was a collaboration
 			continue
 		}

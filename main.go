@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 
@@ -9,6 +8,7 @@ import (
 	"github.com/ynori7/MusicNewReleases/config"
 	"github.com/ynori7/MusicNewReleases/filter"
 	"github.com/ynori7/MusicNewReleases/music"
+	"github.com/ynori7/MusicNewReleases/view"
 )
 
 func main() {
@@ -33,18 +33,27 @@ func main() {
 		logger.WithFields(log.Fields{"error": err}).Fatal("Error parsing config")
 	}
 
+	//Fetch the new releases (filtered by top-level genre)
 	newReleases, err := music.GetPotentiallyInterestingNewReleases(conf)
 	if err != nil {
 		logger.WithFields(log.Fields{"error": err}).Fatal("Error fetching new releases")
 	}
 
+	//Fetch the discographies and filter the releases
 	filterer := filter.NewFilterer(conf, newReleases)
 	interestingDiscographies := filterer.FilterAndEnrich()
 
-	for _, r := range interestingDiscographies {
-		fmt.Println(r.Artist.Name)
-		fmt.Println(r.Artist.Genres)
-		fmt.Printf("Best Rating: %d, Avg Rating: %d\n", r.BestRating, r.AverageRating)
-		fmt.Println(r.Albums[len(r.Albums)-1]) //the newest one
+	//Build HTML output
+	template := view.NewHtmlTemplate(interestingDiscographies)
+	out, err := template.ExecuteHtmlTemplate()
+	if err != nil {
+		logger.WithFields(log.Fields{"error": err}).Fatal("Error generating html")
 	}
+
+	//Save HTML output to file
+	err = ioutil.WriteFile("test.html", []byte(out), 0644)
+	if err != nil {
+		logger.WithFields(log.Fields{"error": err}).Fatal("Error saving html to file")
+	}
+
 }
