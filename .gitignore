@@ -1,4 +1,4 @@
 .idea
 music
-*.html
+out/
 config.yaml

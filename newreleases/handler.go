@@ -51,7 +51,7 @@ func (h newReleasesHandler) GenerateNewReleasesReport(week string) (string, erro
 	if week == "" {
 		dateString = time.Now().Format("20060102") //yyyyMMdd
 	}
-	err = ioutil.WriteFile(fmt.Sprintf("%s-%s.html", h.config.Title, dateString), []byte(out), 0644)
+	err = ioutil.WriteFile(fmt.Sprintf("%s/%s-%s.html", config.CliConf.OutputPath, h.config.Title, dateString), []byte(out), 0644)
 	if err != nil {
 		logger.WithFields(log.Fields{"error": err}).Warn("Error saving html to file")
 		return "", err

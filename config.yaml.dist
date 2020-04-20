@@ -1,9 +1,9 @@
-title: "rap-and-metal"
-main_genres:
+title: "rap-and-metal" #just a title for the configuration which is appended to the out file name
+main_genres: #these genres are filtered first from the new releases list
   - "Rock"
   - "Rap"
   - "R&B" #sometimes rap albums show up as this
-sub_genres:
+sub_genres: #these genres are filtered on the discography pages
   fuzzy_matches:
     - "Metal"
     - "Grindcore"
@@ -12,8 +12,8 @@ sub_genres:
     - "Virtuoso"
   exact_matches:
     - "Grunge" #because we don't want to match "Post-Grunge"
-email:
-  enabled: true
+email: #configuration about the emailer
+  enabled: false #when false, don't send an email
   private_key: ""
   public_key: ""
   from:

@@ -7,12 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-//This is a workaround to avoid panicking when the cli flags get parsed
-var _ = func() bool {
-	testing.Init()
-	return true
-}()
-
 func Test_Parse(t *testing.T) {
 	testConfig := []byte(`title: "rap-and-metal"
 main_genres:

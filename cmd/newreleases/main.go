@@ -1,14 +1,11 @@
 package main
 
 import (
-	"fmt"
-	"io/ioutil"
-	"time"
-
 	log "github.com/sirupsen/logrus"
 	"github.com/ynori7/music/config"
 	"github.com/ynori7/music/email"
 	"github.com/ynori7/music/newreleases"
+	"io/ioutil"
 )
 
 func main() {
@@ -18,6 +15,8 @@ func main() {
 	log.SetLevel(log.DebugLevel)
 	logger := log.WithFields(log.Fields{"Logger": "main"})
 
+	//Get the cli flags
+	config.ParseCliFlags()
 	if config.CliConf.ConfigFile == "" {
 		logger.Fatal("You must specify the path to the config file")
 	}
@@ -42,24 +41,8 @@ func main() {
 
 	if conf.Email.Enabled {
 		mailer := email.NewMailer(conf)
-		if err := mailer.SendMail(getSubjectLine(), report); err != nil {
+		if err := mailer.SendMail(email.GetNewReleasesSubjectLine(config.CliConf.NewReleaseWeek), report); err != nil {
 			logger.WithFields(log.Fields{"error": err}).Error("Error sending email")
 		}
 	}
-}
-
-func getSubjectLine() string {
-	date := ""
-	if config.CliConf.NewReleaseWeek != "" {
-		parsed, err := time.Parse("20060102", config.CliConf.NewReleaseWeek)
-		if err != nil {
-			date = parsed.Format("2006-01-02")
-		}
-	}
-
-	if date == "" {
-		date = time.Now().Format("2006-01-02")
-	}
-
-	return fmt.Sprintf("Newest releases from the week of %s", date)
 }
