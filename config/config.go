@@ -7,8 +7,14 @@ import (
 )
 
 type Config struct {
-	MainGenres []string `yaml:"main_genres,flow"`
-	SubGenres  []string `yaml:"sub_genres,flow"`
+	Title      string
+	MainGenres []string  `yaml:"main_genres,flow"`
+	SubGenres  SubGenres `yaml:"sub_genres"`
+}
+
+type SubGenres struct {
+	FuzzyMatches []string `yaml:"fuzzy_matches,flow"`
+	ExactMatches []string `yaml:"exact_matches,flow"`
 }
 
 /**
@@ -23,12 +29,21 @@ func (c *Config) IsInterestingMainGenre(genre string) bool {
 }
 
 func (c *Config) IsInterestingSubGenre(genre string) bool {
-	return stringContainsListItem(genre, c.SubGenres)
+	return stringContainsListItem(genre, c.SubGenres.FuzzyMatches) || isContainedInList(genre, c.SubGenres.ExactMatches)
 }
 
 func stringContainsListItem(str string, list []string) bool {
 	for _, s := range list {
 		if strings.Contains(str, s) {
+			return true
+		}
+	}
+	return false
+}
+
+func isContainedInList(str string, list []string) bool {
+	for _, s := range list {
+		if str == s {
 			return true
 		}
 	}
