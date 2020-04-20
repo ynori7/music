@@ -9,9 +9,15 @@ import (
 	"github.com/ynori7/music/config"
 )
 
-func GetPotentiallyInterestingNewReleases(conf config.Config) ([]NewRelease, error) {
+const newReleasesUrl = "https://www.allmusic.com/newreleases/all"
+
+func GetPotentiallyInterestingNewReleases(conf config.Config, week string) ([]NewRelease, error) {
 	// Request the HTML page.
-	res, err := http.Get("https://www.allmusic.com/newreleases/all/20200327")
+	url := newReleasesUrl
+	if week != "" {
+		url = url + "/" + week
+	}
+	res, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}

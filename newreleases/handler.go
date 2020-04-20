@@ -1,7 +1,9 @@
 package newreleases
 
 import (
+	"fmt"
 	"io/ioutil"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/ynori7/music/allmusic"
@@ -22,11 +24,11 @@ func NewReleasesHandler(
 	}
 }
 
-func (h newReleasesHandler) GenerateNewReleasesReport() {
+func (h newReleasesHandler) GenerateNewReleasesReport(week string) {
 	logger := log.WithFields(log.Fields{"Logger": "GenerateNewReleasesReport"})
 
 	//Fetch the new releases (filtered by top-level genre)
-	newReleases, err := allmusic.GetPotentiallyInterestingNewReleases(h.config)
+	newReleases, err := allmusic.GetPotentiallyInterestingNewReleases(h.config, week)
 	if err != nil {
 		logger.WithFields(log.Fields{"error": err}).Fatal("Error fetching new releases")
 	}
@@ -43,7 +45,11 @@ func (h newReleasesHandler) GenerateNewReleasesReport() {
 	}
 
 	//Save HTML output to file
-	err = ioutil.WriteFile("27-03-2020.html", []byte(out), 0644)
+	dateString := week
+	if week == "" {
+		dateString = time.Now().Format("20060102") //yyyyMMdd
+	}
+	err = ioutil.WriteFile(fmt.Sprintf("%s-%s.html", h.config.Title, dateString), []byte(out), 0644)
 	if err != nil {
 		logger.WithFields(log.Fields{"error": err}).Fatal("Error saving html to file")
 	}

@@ -2,7 +2,6 @@ package main
 
 import (
 	"io/ioutil"
-	"os"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/ynori7/music/config"
@@ -16,12 +15,12 @@ func main() {
 	log.SetLevel(log.DebugLevel)
 	logger := log.WithFields(log.Fields{"Logger": "main"})
 
-	if len(os.Args) < 2 {
+	if config.CliConf.ConfigFile == "" {
 		logger.Fatal("You must specify the path to the config file")
 	}
 
 	//Get the config
-	data, err := ioutil.ReadFile(os.Args[1])
+	data, err := ioutil.ReadFile(config.CliConf.ConfigFile)
 	if err != nil {
 		logger.WithFields(log.Fields{"error": err}).Fatal("Error reading config file")
 	}
@@ -33,5 +32,5 @@ func main() {
 
 	//Generate the report
 	newReleasesHandler := newreleases.NewReleasesHandler(conf)
-	newReleasesHandler.GenerateNewReleasesReport()
+	newReleasesHandler.GenerateNewReleasesReport(config.CliConf.NewReleaseWeek)
 }
