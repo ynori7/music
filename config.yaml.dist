@@ -1,0 +1,24 @@
+title: "rap-and-metal"
+main_genres:
+  - "Rock"
+  - "Rap"
+  - "R&B" #sometimes rap albums show up as this
+sub_genres:
+  fuzzy_matches:
+    - "Metal"
+    - "Grindcore"
+    - "Hardcore"
+    - "Rap"
+    - "Virtuoso"
+  exact_matches:
+    - "Grunge" #because we don't want to match "Post-Grunge"
+email:
+  enabled: true
+  private_key: ""
+  public_key: ""
+  from:
+    address: ""
+    name: ""
+  to:
+    address: ""
+    name: ""
