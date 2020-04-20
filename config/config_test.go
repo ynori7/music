@@ -1,11 +1,17 @@
 package config
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+//This is a workaround to avoid panicking when the cli flags get parsed
+var _ = func() bool {
+	testing.Init()
+	return true
+}()
 
 func Test_Parse(t *testing.T) {
 	testConfig := []byte(`title: "rap-and-metal"
@@ -21,7 +27,17 @@ sub_genres:
     - "Rap"
     - "Virtuoso"
   exact_matches:
-    - "Grunge" #because we don't want to match "Post-Grunge"`)
+    - "Grunge" #because we don't want to match "Post-Grunge"
+email:
+  enabled: true
+  private_key: "private123"
+  public_key: "public456"
+  from:
+    address: "no-reply@something.com"
+    name: "Nobody"
+  to:
+    address: "me@mysite.com"
+    name: "Me"`)
 
 	c := Config{}
 
@@ -32,6 +48,11 @@ sub_genres:
 	assert.Equal(t, 3, len(c.MainGenres))
 	assert.Equal(t, 5, len(c.SubGenres.FuzzyMatches))
 	assert.Equal(t, 1, len(c.SubGenres.ExactMatches))
+	assert.True(t, c.Email.Enabled)
+	assert.Equal(t, c.Email.PrivateKey, "private123")
+	assert.Equal(t, c.Email.PublicKey, "public456")
+	assert.Equal(t, c.Email.From.Address, "no-reply@something.com")
+	assert.Equal(t, c.Email.To.Name, "Me")
 }
 
 func Test_IsInterestingMainGenre(t *testing.T) {

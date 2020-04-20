@@ -1,10 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/ynori7/music/config"
+	"github.com/ynori7/music/email"
 	"github.com/ynori7/music/newreleases"
 )
 
@@ -32,5 +35,31 @@ func main() {
 
 	//Generate the report
 	newReleasesHandler := newreleases.NewReleasesHandler(conf)
-	newReleasesHandler.GenerateNewReleasesReport(config.CliConf.NewReleaseWeek)
+	report, err := newReleasesHandler.GenerateNewReleasesReport(config.CliConf.NewReleaseWeek)
+	if err != nil {
+		logger.WithFields(log.Fields{"error": err}).Fatal("Unable to generate report")
+	}
+
+	if conf.Email.Enabled {
+		mailer := email.NewMailer(conf)
+		if err := mailer.SendMail(getSubjectLine(), report); err != nil {
+			logger.WithFields(log.Fields{"error": err}).Error("Error sending email")
+		}
+	}
+}
+
+func getSubjectLine() string {
+	date := ""
+	if config.CliConf.NewReleaseWeek != "" {
+		parsed, err := time.Parse("20060102", config.CliConf.NewReleaseWeek)
+		if err != nil {
+			date = parsed.Format("2006-01-02")
+		}
+	}
+
+	if date == "" {
+		date = time.Now().Format("2006-01-02")
+	}
+
+	return fmt.Sprintf("Newest releases from the week of %s", date)
 }

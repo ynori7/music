@@ -10,11 +10,25 @@ type Config struct {
 	Title      string
 	MainGenres []string  `yaml:"main_genres,flow"`
 	SubGenres  SubGenres `yaml:"sub_genres"`
+	Email      Email
 }
 
 type SubGenres struct {
 	FuzzyMatches []string `yaml:"fuzzy_matches,flow"`
 	ExactMatches []string `yaml:"exact_matches,flow"`
+}
+
+type Email struct {
+	Enabled    bool
+	PrivateKey string `yaml:"private_key"`
+	PublicKey  string `yaml:"public_key"`
+	From       EmailRecipient
+	To         EmailRecipient
+}
+
+type EmailRecipient struct {
+	Address string
+	Name    string
 }
 
 /**
