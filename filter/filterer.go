@@ -2,22 +2,20 @@ package filter
 
 import (
 	"fmt"
-	"sort"
-	"time"
-
 	log "github.com/sirupsen/logrus"
 	"github.com/ynori7/MusicNewReleases/config"
 	"github.com/ynori7/MusicNewReleases/music"
+	"sort"
 )
 
 const WorkerCount = 4
 
 type Filterer struct {
 	conf              config.Config
-	potentialReleases music.NewReleases
+	potentialReleases []music.NewRelease
 }
 
-func NewFilterer(conf config.Config, releases music.NewReleases) Filterer {
+func NewFilterer(conf config.Config, releases []music.NewRelease) Filterer {
 	return Filterer{
 		conf:              conf,
 		potentialReleases: releases,
@@ -31,9 +29,9 @@ func (f Filterer) FilterAndEnrich() []music.Discography {
 	errorChan := make(chan error, WorkerCount)
 
 	//Spawn workers to process in parallel
-	workers := make([]chan string, WorkerCount)
+	workers := make([]chan music.NewRelease, WorkerCount)
 	for i := 0; i < WorkerCount; i++ {
-		workers[i] = make(chan string, len(f.potentialReleases)/WorkerCount)
+		workers[i] = make(chan music.NewRelease, len(f.potentialReleases)/WorkerCount)
 		go f.enrichAndFilterWorker(resultsChan, errorChan, workers[i])
 	}
 
@@ -69,26 +67,37 @@ func (f Filterer) FilterAndEnrich() []music.Discography {
 	return discographies
 }
 
-func (f Filterer) enrichAndFilterWorker(successes chan music.Discography, errors chan error, jobs chan string) {
+func (f Filterer) enrichAndFilterWorker(successes chan music.Discography, errors chan error, jobs chan music.NewRelease) {
 	for j := range jobs {
-		discography, err := music.GetArtistDiscography(j)
+		discography, err := music.GetArtistDiscography(j.ArtistLink)
 		if err != nil {
 			errors <- err
 			continue
 		}
 
+		//validate genres
 		if !f.artistHasInterestingGenre(discography.Artist.Genres) {
 			errors <- fmt.Errorf("artist is not an interesting genre")
 			continue
 		}
 
+		//validate ratings
 		if discography.BestRating < 8 {
 			errors <- fmt.Errorf("artist doesn't have high enough ratings")
 			continue
 		}
 
-		if discography.NewestRelease.Year != "" && discography.NewestRelease.Year != fmt.Sprintf("%d", time.Now().Year()) {
-			errors <- fmt.Errorf("newest album is not from this year") //this can happen when the newest album was a collaboration
+		//filtering out singles and EPs
+		foundNewAlbum := false
+		for _, album := range discography.Albums {
+			if album.Title == j.NewAlbumTitle {
+				foundNewAlbum = true
+				discography.NewestRelease = album //ensure we've selected the right one, just to be safe. Sometimes they aren't sorted properly
+				break
+			}
+		}
+		if !foundNewAlbum {
+			errors <- fmt.Errorf("newest album was not found in the list") //it was probably a single or an EP
 			continue
 		}
 

@@ -23,4 +23,7 @@ type Discography struct {
 	Score int //This is a score based on the various ratings available
 }
 
-type NewReleases []string
+type NewRelease struct {
+	ArtistLink string
+	NewAlbumTitle string
+}

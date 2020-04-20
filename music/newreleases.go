@@ -9,7 +9,7 @@ import (
 	"github.com/ynori7/MusicNewReleases/config"
 )
 
-func GetPotentiallyInterestingNewReleases(conf config.Config) (NewReleases, error) {
+func GetPotentiallyInterestingNewReleases(conf config.Config) ([]NewRelease, error) {
 	// Request the HTML page.
 	res, err := http.Get("https://www.allmusic.com/newreleases/all/20200327")
 	if err != nil {
@@ -27,7 +27,7 @@ func GetPotentiallyInterestingNewReleases(conf config.Config) (NewReleases, erro
 	}
 
 	newReleaseSet := make(map[string]struct{}, 0) //used for deduplication
-	newReleases := make(NewReleases, 0)
+	newReleases := make([]NewRelease, 0)
 
 	// Find the new releases
 	doc.Find(".all-new-releases tr[data-type-filter=\"NEW\"]").Each(func(i int, s *goquery.Selection) {
@@ -48,10 +48,13 @@ func GetPotentiallyInterestingNewReleases(conf config.Config) (NewReleases, erro
 			return //sometimes there is no artist page
 		}
 		bandLink, _ := band.Attr("href")
-		bandLink = bandLink +"/discography"
+		bandLink = bandLink + "/discography"
 
 		if _, ok := newReleaseSet[bandLink]; !ok {
-			newReleases = append(newReleases, bandLink+"/discography")
+			newReleases = append(newReleases, NewRelease{
+				ArtistLink:    bandLink + "/discography",
+				NewAlbumTitle: album,
+			})
 			newReleaseSet[bandLink] = struct{}{}
 		}
 	})
@@ -60,6 +63,7 @@ func GetPotentiallyInterestingNewReleases(conf config.Config) (NewReleases, erro
 }
 
 var compilationIndicators = []string{"Live", "Compilation", "Best of", "Interview", "From the Vault", "Collection"}
+
 func isCompilation(title string) bool {
 	for _, i := range compilationIndicators {
 		if strings.Contains(title, i) {
