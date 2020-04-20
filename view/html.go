@@ -6,14 +6,14 @@ import (
 	"fmt"
 	"html/template"
 
-	"github.com/ynori7/MusicNewReleases/music"
+	"github.com/ynori7/music/allmusic"
 )
 
 type HtmlTemplate struct {
-	Discographies []music.Discography
+	Discographies []allmusic.Discography
 }
 
-func NewHtmlTemplate(discographies []music.Discography) HtmlTemplate {
+func NewHtmlTemplate(discographies []allmusic.Discography) HtmlTemplate {
 	return HtmlTemplate{
 		Discographies: discographies,
 	}

@@ -1,37 +1,39 @@
 package filter
 
 import (
+	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
-	"github.com/ynori7/MusicNewReleases/config"
-	"github.com/ynori7/MusicNewReleases/music"
 	"sort"
+
+	log "github.com/sirupsen/logrus"
+	"github.com/ynori7/music/allmusic"
+	"github.com/ynori7/music/config"
 )
 
-const WorkerCount = 4
+const WorkerCount = 5
 
 type Filterer struct {
 	conf              config.Config
-	potentialReleases []music.NewRelease
+	potentialReleases []allmusic.NewRelease
 }
 
-func NewFilterer(conf config.Config, releases []music.NewRelease) Filterer {
+func NewFilterer(conf config.Config, releases []allmusic.NewRelease) Filterer {
 	return Filterer{
 		conf:              conf,
 		potentialReleases: releases,
 	}
 }
 
-func (f Filterer) FilterAndEnrich() []music.Discography {
+func (f Filterer) FilterAndEnrich() []allmusic.Discography {
 	logger := log.WithFields(log.Fields{"Logger": "FilterAndEnrich"})
 
-	resultsChan := make(chan music.Discography, WorkerCount)
+	resultsChan := make(chan allmusic.Discography, WorkerCount)
 	errorChan := make(chan error, WorkerCount)
 
 	//Spawn workers to process in parallel
-	workers := make([]chan music.NewRelease, WorkerCount)
+	workers := make([]chan allmusic.NewRelease, WorkerCount)
 	for i := 0; i < WorkerCount; i++ {
-		workers[i] = make(chan music.NewRelease, len(f.potentialReleases)/WorkerCount)
+		workers[i] = make(chan allmusic.NewRelease, len(f.potentialReleases)/WorkerCount)
 		go f.enrichAndFilterWorker(resultsChan, errorChan, workers[i])
 	}
 
@@ -43,14 +45,20 @@ func (f Filterer) FilterAndEnrich() []music.Discography {
 	}
 
 	//Process results
-	discographies := make([]music.Discography, 0)
+	discographies := make([]allmusic.Discography, 0)
 	for i := 0; i < len(f.potentialReleases); i++ {
 		select {
 		case r := <-resultsChan:
 			logger.WithFields(log.Fields{"Artist": r.Artist.Name}).Debug("Found interesting artist")
 			discographies = append(discographies, r)
 		case err := <-errorChan:
-			logger.WithFields(log.Fields{"error": err}).Info("Filtered an artist")
+			unwrappedErr :=  errors.Unwrap(err)
+			switch unwrappedErr {
+			case ErrAlbumNotFound, ErrNotHighEnoughRatings, ErrNotInterestingGenre:
+				logger.WithFields(log.Fields{"error": err}).Info("Filtered an artist")
+			default:
+				logger.WithFields(log.Fields{"error": err}).Error("Error looking up artist data")
+			}
 		}
 	}
 
@@ -67,23 +75,23 @@ func (f Filterer) FilterAndEnrich() []music.Discography {
 	return discographies
 }
 
-func (f Filterer) enrichAndFilterWorker(successes chan music.Discography, errors chan error, jobs chan music.NewRelease) {
+func (f Filterer) enrichAndFilterWorker(successes chan allmusic.Discography, errors chan error, jobs chan allmusic.NewRelease) {
 	for j := range jobs {
-		discography, err := music.GetArtistDiscography(j.ArtistLink)
+		discography, err := allmusic.GetArtistDiscography(j.ArtistLink)
 		if err != nil {
-			errors <- err
+			errors <- fmt.Errorf("%w: %s", err, discography.Artist.Name)
 			continue
 		}
 
 		//validate genres
 		if !f.artistHasInterestingGenre(discography.Artist.Genres) {
-			errors <- fmt.Errorf("artist is not an interesting genre")
+			errors <- fmt.Errorf("%w: %s", ErrNotInterestingGenre, discography.Artist.Name)
 			continue
 		}
 
 		//validate ratings
 		if discography.BestRating < 8 {
-			errors <- fmt.Errorf("artist doesn't have high enough ratings")
+			errors <- fmt.Errorf("%w: %s", ErrNotHighEnoughRatings, discography.Artist.Name)
 			continue
 		}
 
@@ -97,7 +105,7 @@ func (f Filterer) enrichAndFilterWorker(successes chan music.Discography, errors
 			}
 		}
 		if !foundNewAlbum {
-			errors <- fmt.Errorf("newest album was not found in the list") //it was probably a single or an EP
+			errors <- fmt.Errorf("%w: %s - %s", ErrAlbumNotFound, discography.Artist.Name, j.NewAlbumTitle) //it was probably a single or an EP
 			continue
 		}
 

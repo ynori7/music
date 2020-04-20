@@ -1,4 +1,4 @@
-module github.com/ynori7/MusicNewReleases
+module github.com/ynori7/music
 
 go 1.14
 

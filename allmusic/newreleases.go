@@ -1,4 +1,4 @@
-package music
+package allmusic
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/ynori7/MusicNewReleases/config"
+	"github.com/ynori7/music/config"
 )
 
 func GetPotentiallyInterestingNewReleases(conf config.Config) ([]NewRelease, error) {

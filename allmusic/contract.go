@@ -1,4 +1,4 @@
-package music
+package allmusic
 
 type Artist struct {
 	Name   string
