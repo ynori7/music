@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/ynori7/music/allmusic"
@@ -52,7 +53,7 @@ func (f Filterer) FilterAndEnrich() []allmusic.Discography {
 			logger.WithFields(log.Fields{"Artist": r.Artist.Name}).Debug("Found interesting artist")
 			discographies = append(discographies, r)
 		case err := <-errorChan:
-			unwrappedErr :=  errors.Unwrap(err)
+			unwrappedErr := errors.Unwrap(err)
 			switch unwrappedErr {
 			case ErrAlbumNotFound, ErrNotHighEnoughRatings, ErrNotInterestingGenre:
 				logger.WithFields(log.Fields{"error": err}).Info("Filtered an artist")
@@ -79,7 +80,7 @@ func (f Filterer) enrichAndFilterWorker(successes chan allmusic.Discography, err
 	for j := range jobs {
 		discography, err := allmusic.GetArtistDiscography(j.ArtistLink)
 		if err != nil {
-			errors <- fmt.Errorf("%w: %s", err, discography.Artist.Name)
+			errors <- fmt.Errorf("%w: %s", err, j.ArtistLink)
 			continue
 		}
 
@@ -96,26 +97,43 @@ func (f Filterer) enrichAndFilterWorker(successes chan allmusic.Discography, err
 		}
 
 		//filtering out singles and EPs
-		foundNewAlbum := false
-		for _, album := range discography.Albums {
-			if album.Title == j.NewAlbumTitle {
-				foundNewAlbum = true
-				discography.NewestRelease = album //ensure we've selected the right one, just to be safe. Sometimes they aren't sorted properly
-				break
-			}
-		}
-		if !foundNewAlbum {
-			errors <- fmt.Errorf("%w: %s - %s", ErrAlbumNotFound, discography.Artist.Name, j.NewAlbumTitle) //it was probably a single or an EP
+		newestReleases := f.findNewReleases(discography, j.NewAlbumTitles)
+		if len(newestReleases) == 0 {
+			errors <- fmt.Errorf("%w: %s - %s", ErrAlbumNotFound, discography.Artist.Name, strings.Join(j.NewAlbumTitles, ",")) //it was probably a single or an EP
 			continue
 		}
 
-		successes <- *discography
+		//push all the new releases (an artist can theoretically have more than one)
+		for _, r := range newestReleases {
+			discography.NewestRelease = r
+			successes <- *discography
+		}
 	}
+}
+
+func (f Filterer) findNewReleases(discography *allmusic.Discography, releaseTitles []string) []allmusic.Album {
+	newestReleases := make([]allmusic.Album, 0, len(releaseTitles))
+	for _, album := range discography.Albums {
+		if inArray(album.Title, releaseTitles) {
+			newestReleases = append(newestReleases, album) //ensure we've selected the right one, just to be safe. Sometimes they aren't sorted properly
+		}
+	}
+
+	return newestReleases
 }
 
 func (f Filterer) artistHasInterestingGenre(genres []string) bool {
 	for _, g := range genres {
 		if f.conf.IsInterestingSubGenre(g) {
+			return true
+		}
+	}
+	return false
+}
+
+func inArray(needle string, haystack []string) bool {
+	for _, s := range haystack {
+		if s == needle {
 			return true
 		}
 	}

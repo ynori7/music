@@ -11,19 +11,19 @@ type Album struct {
 	Link   string
 	Rating int //Out of 10. A zero means there is no rating
 	Image  string
-	Year string
+	Year   string
 }
 
 type Discography struct {
-	Artist        Artist
-	Albums        []Album
-	AverageRating int
-	BestRating    int
-	NewestRelease Album
-	Score int //This is a score based on the various ratings available
+	Artist         Artist
+	Albums         []Album
+	AverageRating  int
+	BestRating     int
+	NewestRelease  Album
+	Score          int //This is a score based on the various ratings available
 }
 
 type NewRelease struct {
-	ArtistLink string
-	NewAlbumTitle string
+	ArtistLink     string
+	NewAlbumTitles []string
 }

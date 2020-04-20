@@ -32,8 +32,7 @@ func GetPotentiallyInterestingNewReleases(conf config.Config, week string) ([]Ne
 		return nil, err
 	}
 
-	newReleaseSet := make(map[string]struct{}, 0) //used for deduplication
-	newReleases := make([]NewRelease, 0)
+	newReleaseSet := make(map[string]*NewRelease, 0) //used for deduplication
 
 	// Find the new releases
 	doc.Find(".all-new-releases tr[data-type-filter=\"NEW\"]").Each(func(i int, s *goquery.Selection) {
@@ -57,13 +56,19 @@ func GetPotentiallyInterestingNewReleases(conf config.Config, week string) ([]Ne
 		bandLink = bandLink + "/discography"
 
 		if _, ok := newReleaseSet[bandLink]; !ok {
-			newReleases = append(newReleases, NewRelease{
+			newReleaseSet[bandLink] = &NewRelease{
 				ArtistLink:    bandLink + "/discography",
-				NewAlbumTitle: album,
-			})
-			newReleaseSet[bandLink] = struct{}{}
+				NewAlbumTitles: []string{},
+			}
 		}
+		newReleaseSet[bandLink].NewAlbumTitles = append(newReleaseSet[bandLink].NewAlbumTitles, album)
 	})
+
+	//turn the map into a list
+	newReleases := make([]NewRelease, 0, len(newReleaseSet))
+	for _, r := range newReleaseSet {
+		newReleases = append(newReleases, *r)
+	}
 
 	return newReleases, nil
 }
