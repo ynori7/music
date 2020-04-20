@@ -42,6 +42,7 @@ func main() {
 	//Fetch the discographies and filter the releases
 	filterer := filter.NewFilterer(conf, newReleases)
 	interestingDiscographies := filterer.FilterAndEnrich()
+	//TODO: filter out singles/EPs somehow. maybe i have to keep track of the expected new release name and see if it appears in the discography or not (27-03 is a good example)
 
 	//Build HTML output
 	template := view.NewHtmlTemplate(interestingDiscographies)
@@ -51,7 +52,7 @@ func main() {
 	}
 
 	//Save HTML output to file
-	err = ioutil.WriteFile("10-04-2020.html", []byte(out), 0644)
+	err = ioutil.WriteFile("27-03-2020.html", []byte(out), 0644)
 	if err != nil {
 		logger.WithFields(log.Fields{"error": err}).Fatal("Error saving html to file")
 	}

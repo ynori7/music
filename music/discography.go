@@ -107,11 +107,11 @@ func getEditorRating(s *goquery.Selection) int {
 }
 
 func calculateScore(bestRating, averageRating, ratingCount, newestAlbumRating int) int {
-	score := bestRating * 4 //a third of the score is from the best rating (gives some extra weight to the average)
-	score += averageRating * 4 //another third is from the average rating
+	score := bestRating * 4 //40% of the score is from the best rating (gives some extra weight to the average)
+	score += averageRating * 4 //another 40% is from the average rating
 
-	if newestAlbumRating != 0 {
-		score = getAverage((newestAlbumRating * 8) + score, 2) //average the newest rating with the current score to weight based on the new album
+	if newestAlbumRating >= 8 {
+		score = newestAlbumRating * 8 //if the newest album is a well-rated one, use that as the base for the score to give it extra boost
 	}
 
 	//add a little extra weight based on the total number of ratings there were

@@ -25,14 +25,14 @@ func Test_calculateScore(t *testing.T) {
 			averageRating:     6,
 			ratingCount:       16,
 			newestAlbumRating: 9,
-			expectedScore:     86,
+			expectedScore:     92,
 		},
 		"King Diamond with poorly-rated new album": {
 			bestRating:        9,
 			averageRating:     6,
 			ratingCount:       16,
 			newestAlbumRating: 6,
-			expectedScore:     74,
+			expectedScore:     80,
 		},
 
 		//Okay top ratings, low average, high rating count
@@ -48,14 +48,14 @@ func Test_calculateScore(t *testing.T) {
 			averageRating:     6,
 			ratingCount:       15,
 			newestAlbumRating: 5,
-			expectedScore:     68,
+			expectedScore:     76,
 		},
 		"Manowar with well-rated new album": {
 			bestRating:        8,
 			averageRating:     6,
 			ratingCount:       15,
 			newestAlbumRating: 8,
-			expectedScore:     80,
+			expectedScore:     84,
 		},
 
 		//Great top ratings, good average, high rating count
@@ -71,14 +71,14 @@ func Test_calculateScore(t *testing.T) {
 			averageRating:     7,
 			ratingCount:       14,
 			newestAlbumRating: 5,
-			expectedScore:     74,
+			expectedScore:     88,
 		},
 		"Eminem with well-rated new album": {
 			bestRating:        10,
 			averageRating:     7,
 			ratingCount:       14,
 			newestAlbumRating: 9,
-			expectedScore:     90,
+			expectedScore:     92,
 		},
 
 		//Great top ratings, great average, low rating count
@@ -94,14 +94,14 @@ func Test_calculateScore(t *testing.T) {
 			averageRating:     8,
 			ratingCount:       3,
 			newestAlbumRating: 6,
-			expectedScore:     70,
+			expectedScore:     82,
 		},
 		"NWA with well-rated new album": {
 			bestRating:        10,
 			averageRating:     8,
 			ratingCount:       3,
 			newestAlbumRating: 10,
-			expectedScore:     86,
+			expectedScore:     90,
 		},
 
 		//Okay top rating, low average, middle rating count
@@ -117,14 +117,14 @@ func Test_calculateScore(t *testing.T) {
 			averageRating:     7,
 			ratingCount:       7,
 			newestAlbumRating: 5,
-			expectedScore:     65,
+			expectedScore:     75,
 		},
 		"50 Cent with well-rated new album": {
 			bestRating:        8,
 			averageRating:     7,
 			ratingCount:       7,
-			newestAlbumRating: 4,
-			expectedScore:     61, //TODO: maybe think about if this is right that the average gets brought down
+			newestAlbumRating: 8,
+			expectedScore:     79,
 		},
 	}
 

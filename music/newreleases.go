@@ -11,7 +11,7 @@ import (
 
 func GetPotentiallyInterestingNewReleases(conf config.Config) (NewReleases, error) {
 	// Request the HTML page.
-	res, err := http.Get("https://www.allmusic.com/newreleases/all/20200410")
+	res, err := http.Get("https://www.allmusic.com/newreleases/all/20200327")
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func GetPotentiallyInterestingNewReleases(conf config.Config) (NewReleases, erro
 	return newReleases, nil
 }
 
-var compilationIndicators = []string{"Live", "Compilation", "Best of", "Interview", "From the Vault"}
+var compilationIndicators = []string{"Live", "Compilation", "Best of", "Interview", "From the Vault", "Collection"}
 func isCompilation(title string) bool {
 	for _, i := range compilationIndicators {
 		if strings.Contains(title, i) {

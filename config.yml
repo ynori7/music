@@ -1,9 +1,11 @@
 main_genres:
   - "Rock"
   - "Rap"
+  - "R&B" #sometimes rap albums show up as this
 sub_genres:
   - "Metal"
   - "Grindcore"
   - "Hardcore"
   - "Rap"
   - "Virtuoso"
+  - "Grunge"
