@@ -22,6 +22,19 @@ go run cmd/newreleases/main.go --config config.yaml \
 
 Be sure to first copy `config.yaml.dist` to `config.yaml` and fill in the missing blanks
 
+**Set up cronjob:**
+First, build the binary:
+```
+go build cmd/newreleases/main.go -o newreleasesmailer
+```
+
+Then set up the cronjob:
+```
+0 14 * * 4 /path/to/goprojects/src/github.com/ynori7/music/newreleasesmailer --config /path/to/goprojects/src/github.com/ynori7/music/config.yaml --output /path/to/goprojects/src/github.com/ynori7/music/out
+```
+
+Note that the new releases page is available on Allmusic on Thursday afternoons, so that's when we schedule the job to run.
+
 ## Project Structure
 
 Commands are located in `cmd` and are the main entry points.
