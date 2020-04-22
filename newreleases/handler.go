@@ -24,6 +24,10 @@ func NewReleasesHandler(
 	}
 }
 
+/*
+ * GenerateNewReleasesReport fetches the new releases, then filters them by fetching the discographies for the artists,
+ * and then generates an HTML report.
+ */
 func (h newReleasesHandler) GenerateNewReleasesReport(week string) (string, error) {
 	logger := log.WithFields(log.Fields{"Logger": "GenerateNewReleasesReport"})
 

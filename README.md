@@ -10,6 +10,7 @@ the configured genres, and for each one checks if it's interesting based on sub-
 and ratings. It can then generate an HTML report which is sent by email.
 
 **Usage:**
+
 ```
 go run cmd/newreleases/main.go --config config.yaml \
     --new-release-week 20200327 --output out
@@ -23,6 +24,7 @@ go run cmd/newreleases/main.go --config config.yaml \
 Be sure to first copy `config.yaml.dist` to `config.yaml` and fill in the missing blanks
 
 **Set up cronjob:**
+
 First, build the binary:
 ```
 go build cmd/newreleases/main.go -o newreleasesmailer
