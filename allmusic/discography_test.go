@@ -1,8 +1,35 @@
 package allmusic
 
 import (
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+func Test_GetArtistDiscography_KingDiamond(t *testing.T) {
+	//given
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		dat, err := ioutil.ReadFile("testdata/king-diamond.html")
+		require.NoError(t, err, "There was an error reading the test data file")
+		rw.Write(dat)
+	}))
+	defer server.Close()
+
+	dicographyClient := DiscographyClient{server.Client()}
+
+	//when
+	discography, err := dicographyClient.GetArtistDiscography(server.URL)
+
+	//then
+	require.NoError(t, err, "There was an error getting the discography")
+	assert.Equal(t, "King Diamond", discography.Artist.Name)
+	assert.Equal(t, 18, len(discography.Albums))
+	assert.Equal(t, 9, discography.BestRating)
+}
 
 func Test_calculateScore(t *testing.T) {
 	testdata := map[string]struct {

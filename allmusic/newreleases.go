@@ -11,13 +11,29 @@ import (
 
 const newReleasesUrl = "https://www.allmusic.com/newreleases/all"
 
-func GetPotentiallyInterestingNewReleases(conf config.Config, week string) ([]NewRelease, error) {
-	// Request the HTML page.
+type ReleasesClient struct {
+	httpClient *http.Client
+	conf config.Config
+}
+
+func NewReleasesClient(conf config.Config) ReleasesClient {
+	return ReleasesClient{
+		httpClient: &http.Client{},
+		conf: conf,
+	}
+}
+
+func GetNewReleasesUrlForWeek(week string) string {
 	url := newReleasesUrl
 	if week != "" {
 		url = url + "/" + week
 	}
-	res, err := http.Get(url)
+	return url
+}
+
+func (rc ReleasesClient) GetPotentiallyInterestingNewReleases(url string) ([]NewRelease, error) {
+	// Request the HTML page.
+	res, err := rc.httpClient.Get(url)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +53,7 @@ func GetPotentiallyInterestingNewReleases(conf config.Config, week string) ([]Ne
 	// Find the new releases
 	doc.Find(".all-new-releases tr[data-type-filter=\"NEW\"]").Each(func(i int, s *goquery.Selection) {
 		genre := s.Find(".genre a").Text()
-		if !conf.IsInterestingMainGenre(genre) {
+		if !rc.conf.IsInterestingMainGenre(genre) {
 			return
 		}
 

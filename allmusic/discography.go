@@ -13,9 +13,19 @@ import (
 
 const BaseUrl = "https://www.allmusic.com"
 
-func GetArtistDiscography(link string) (*Discography, error) {
+type DiscographyClient struct {
+	httpClient *http.Client
+}
+
+func NewDiscographyClient() DiscographyClient {
+	return DiscographyClient{
+		httpClient: &http.Client{},
+	}
+}
+
+func (dc DiscographyClient) GetArtistDiscography(link string) (*Discography, error) {
 	// Request the HTML page.
-	res, err := http.Get(link)
+	res, err := dc.httpClient.Get(link)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +51,7 @@ func GetArtistDiscography(link string) (*Discography, error) {
 		}
 	})
 
-	//Scan the discography
+	// Scan the discography
 	ratingCount := 0
 	ratingSum := 0
 	doc.Find(".discography tr").Each(func(i int, s *goquery.Selection) {
@@ -76,7 +86,7 @@ func GetArtistDiscography(link string) (*Discography, error) {
 		discography.Albums = append(discography.Albums, album)
 	})
 
-	//find newest release by iterating the list backwards.
+	// Find newest release by iterating the list backwards.
 	discography.NewestRelease = discography.Albums[len(discography.Albums)-1] // Sometimes the newest album won't have a year yet, so we use the last item by default
 	for i := len(discography.Albums) - 1; i >= 0; i-- {
 		if discography.Albums[i].Year == fmt.Sprintf("%d", time.Now().Year()) {
@@ -85,7 +95,7 @@ func GetArtistDiscography(link string) (*Discography, error) {
 		}
 	}
 
-	//Set average rating and calculate score
+	// Set average rating and calculate score
 	if ratingCount > 0 {
 		discography.AverageRating = getAverage(ratingSum, ratingCount)
 	}

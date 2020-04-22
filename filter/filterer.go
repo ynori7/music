@@ -16,12 +16,14 @@ const WorkerCount = 5
 type Filterer struct {
 	conf              config.Config
 	potentialReleases []allmusic.NewRelease
+	discographyClient allmusic.DiscographyClient
 }
 
-func NewFilterer(conf config.Config, releases []allmusic.NewRelease) Filterer {
+func NewFilterer(conf config.Config, discographyClient allmusic.DiscographyClient, releases []allmusic.NewRelease) Filterer {
 	return Filterer{
 		conf:              conf,
 		potentialReleases: releases,
+		discographyClient: discographyClient,
 	}
 }
 
@@ -78,7 +80,7 @@ func (f Filterer) FilterAndEnrich() []allmusic.Discography {
 
 func (f Filterer) enrichAndFilterWorker(successes chan allmusic.Discography, errors chan error, jobs chan allmusic.NewRelease) {
 	for j := range jobs {
-		discography, err := allmusic.GetArtistDiscography(j.ArtistLink)
+		discography, err := f.discographyClient.GetArtistDiscography(j.ArtistLink)
 		if err != nil {
 			errors <- fmt.Errorf("%w: %s", err, j.ArtistLink)
 			continue

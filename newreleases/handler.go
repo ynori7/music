@@ -28,14 +28,14 @@ func (h newReleasesHandler) GenerateNewReleasesReport(week string) (string, erro
 	logger := log.WithFields(log.Fields{"Logger": "GenerateNewReleasesReport"})
 
 	//Fetch the new releases (filtered by top-level genre)
-	newReleases, err := allmusic.GetPotentiallyInterestingNewReleases(h.config, week)
+	newReleases, err := allmusic.NewReleasesClient(h.config).GetPotentiallyInterestingNewReleases(allmusic.GetNewReleasesUrlForWeek(week))
 	if err != nil {
 		logger.WithFields(log.Fields{"error": err}).Error("Error fetching new releases")
 		return "", err
 	}
 
 	//Fetch the discographies and filter the releases
-	filterer := filter.NewFilterer(h.config, newReleases)
+	filterer := filter.NewFilterer(h.config, allmusic.NewDiscographyClient(), newReleases)
 	interestingDiscographies := filterer.FilterAndEnrich()
 
 	//Build HTML output
