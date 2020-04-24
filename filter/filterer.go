@@ -3,13 +3,13 @@ package filter
 import (
 	"errors"
 	"fmt"
+	"sort"
+
 	log "github.com/sirupsen/logrus"
 	"github.com/ynori7/music/allmusic"
 	"github.com/ynori7/music/config"
-	"sort"
+	"github.com/ynori7/workerpool"
 )
-
-const WorkerCount = 5
 
 type Filterer struct {
 	conf              config.Config
@@ -28,31 +28,17 @@ func NewFilterer(conf config.Config, discographyClient allmusic.DiscographyClien
 func (f Filterer) FilterAndEnrich() []allmusic.Discography {
 	logger := log.WithFields(log.Fields{"Logger": "FilterAndEnrich"})
 
-	resultsChan := make(chan allmusic.Discography, WorkerCount)
-	errorChan := make(chan error, WorkerCount)
-
-	//Spawn workers to process in parallel
-	workers := make([]chan allmusic.NewRelease, WorkerCount)
-	for i := 0; i < WorkerCount; i++ {
-		workers[i] = make(chan allmusic.NewRelease, len(f.potentialReleases)/WorkerCount)
-		go f.enrichAndFilterWorker(resultsChan, errorChan, workers[i])
-	}
-
-	//Assign an equal number of releases to be checked by each worker
-	var i = 0
-	for _, s := range f.potentialReleases {
-		workers[i] <- s
-		i = (i + 1) % WorkerCount
-	}
-
 	//Process results
 	discographies := make([]allmusic.Discography, 0)
-	for i := 0; i < len(f.potentialReleases); i++ {
-		select {
-		case r := <-resultsChan:
+
+	//Set up worker pool
+	workerPool := workerpool.NewWorkerPool(5,
+		func(result interface{}) {
+			r := result.(allmusic.Discography)
 			logger.WithFields(log.Fields{"Artist": r.Artist.Name}).Debug("Found interesting artist")
 			discographies = append(discographies, r)
-		case err := <-errorChan:
+		},
+		func(err error) {
 			unwrappedErr := errors.Unwrap(err)
 			switch unwrappedErr {
 			case ErrAlbumNotFound, ErrNotHighEnoughRatings, ErrNotInterestingGenre:
@@ -60,7 +46,13 @@ func (f Filterer) FilterAndEnrich() []allmusic.Discography {
 			default:
 				logger.WithFields(log.Fields{"error": err}).Error("Error looking up artist data")
 			}
-		}
+		},
+		f.processNewRelease,
+	)
+
+	//Do the work
+	if err := workerPool.Work(f.potentialReleases); err != nil {
+		logger.WithFields(log.Fields{"error": err}).Error("Error processing jobs")
 	}
 
 	//Sort the results
@@ -68,45 +60,36 @@ func (f Filterer) FilterAndEnrich() []allmusic.Discography {
 		return discographies[i].Score > discographies[j].Score
 	})
 
-	//Signal workers to stop working
-	for _, worker := range workers {
-		close(worker)
-	}
-
 	return discographies
 }
 
-func (f Filterer) enrichAndFilterWorker(successes chan allmusic.Discography, errors chan error, jobs chan allmusic.NewRelease) {
-	for j := range jobs {
-		discography, err := f.discographyClient.GetArtistDiscography(j.ArtistLink)
-		if err != nil {
-			errors <- fmt.Errorf("%w: %s", err, j.ArtistLink)
-			continue
-		}
+func (f Filterer) processNewRelease(job interface{}) (result interface{}, err error) {
+	j := job.(allmusic.NewRelease)
 
-		//validate genres
-		if !f.artistHasInterestingGenre(discography.Artist.Genres) {
-			errors <- fmt.Errorf("%w: %s", ErrNotInterestingGenre, discography.Artist.Name)
-			continue
-		}
-
-		//validate ratings
-		if discography.BestRating < 8 {
-			errors <- fmt.Errorf("%w: %s", ErrNotHighEnoughRatings, discography.Artist.Name)
-			continue
-		}
-
-		//filtering out singles and EPs
-		newestRelease := f.findNewRelease(discography, j.NewAlbumTitle)
-		if newestRelease == nil {
-			errors <- fmt.Errorf("%w: %s - %s", ErrAlbumNotFound, discography.Artist.Name, j.NewAlbumTitle) //it was probably a single or an EP
-			continue
-		}
-
-		//push the new release
-		discography.NewestRelease = *newestRelease
-		successes <- *discography
+	discography, err := f.discographyClient.GetArtistDiscography(j.ArtistLink)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %s", err, j.ArtistLink)
 	}
+
+	//validate genres
+	if !f.artistHasInterestingGenre(discography.Artist.Genres) {
+		return nil, fmt.Errorf("%w: %s", ErrNotInterestingGenre, discography.Artist.Name)
+	}
+
+	//validate ratings
+	if discography.BestRating < 8 {
+		return nil, fmt.Errorf("%w: %s", ErrNotHighEnoughRatings, discography.Artist.Name)
+	}
+
+	//filtering out singles and EPs
+	newestRelease := f.findNewRelease(discography, j.NewAlbumTitle)
+	if newestRelease == nil {
+		return nil, fmt.Errorf("%w: %s - %s", ErrAlbumNotFound, discography.Artist.Name, j.NewAlbumTitle) //it was probably a single or an EP
+	}
+
+	//push the new release
+	discography.NewestRelease = *newestRelease
+	return *discography, nil
 }
 
 func (f Filterer) findNewRelease(discography *allmusic.Discography, releaseTitle string) *allmusic.Album {
@@ -122,15 +105,6 @@ func (f Filterer) findNewRelease(discography *allmusic.Discography, releaseTitle
 func (f Filterer) artistHasInterestingGenre(genres []string) bool {
 	for _, g := range genres {
 		if f.conf.IsInterestingSubGenre(g) {
-			return true
-		}
-	}
-	return false
-}
-
-func inArray(needle string, haystack []string) bool {
-	for _, s := range haystack {
-		if s == needle {
 			return true
 		}
 	}
