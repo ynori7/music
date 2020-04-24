@@ -10,6 +10,7 @@ the configured genres, and for each one checks if it's interesting based on sub-
 and ratings. It can then generate an HTML report which is sent by email.
 
 **Usage:**
+
 ```
 go run cmd/newreleases/main.go --config config.yaml \
     --new-release-week 20200327 --output out
@@ -23,6 +24,7 @@ go run cmd/newreleases/main.go --config config.yaml \
 Be sure to first copy `config.yaml.dist` to `config.yaml` and fill in the missing blanks
 
 **Set up cronjob:**
+
 First, build the binary:
 ```
 go build cmd/newreleases/main.go -o newreleasesmailer
@@ -30,10 +32,10 @@ go build cmd/newreleases/main.go -o newreleasesmailer
 
 Then set up the cronjob:
 ```
-0 14 * * 4 /path/to/goprojects/src/github.com/ynori7/music/newreleasesmailer --config /path/to/goprojects/src/github.com/ynori7/music/config.yaml --output /path/to/goprojects/src/github.com/ynori7/music/out
+0 14 * * 5 /path/to/goprojects/src/github.com/ynori7/music/newreleasesmailer --config /path/to/goprojects/src/github.com/ynori7/music/config.yaml --output /path/to/goprojects/src/github.com/ynori7/music/out
 ```
 
-Note that the new releases page is available on Allmusic on Thursday afternoons, so that's when we schedule the job to run.
+Note that the new releases page is available on Allmusic on Friday afternoons, so that's when we schedule the job to run.
 
 ## Project Structure
 

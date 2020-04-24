@@ -3,12 +3,10 @@ package filter
 import (
 	"errors"
 	"fmt"
-	"sort"
-	"strings"
-
 	log "github.com/sirupsen/logrus"
 	"github.com/ynori7/music/allmusic"
 	"github.com/ynori7/music/config"
+	"sort"
 )
 
 const WorkerCount = 5
@@ -99,29 +97,26 @@ func (f Filterer) enrichAndFilterWorker(successes chan allmusic.Discography, err
 		}
 
 		//filtering out singles and EPs
-		newestReleases := f.findNewReleases(discography, j.NewAlbumTitles)
-		if len(newestReleases) == 0 {
-			errors <- fmt.Errorf("%w: %s - %s", ErrAlbumNotFound, discography.Artist.Name, strings.Join(j.NewAlbumTitles, ",")) //it was probably a single or an EP
+		newestRelease := f.findNewRelease(discography, j.NewAlbumTitle)
+		if newestRelease == nil {
+			errors <- fmt.Errorf("%w: %s - %s", ErrAlbumNotFound, discography.Artist.Name, j.NewAlbumTitle) //it was probably a single or an EP
 			continue
 		}
 
-		//push all the new releases (an artist can theoretically have more than one)
-		for _, r := range newestReleases {
-			discography.NewestRelease = r
-			successes <- *discography
-		}
+		//push the new release
+		discography.NewestRelease = *newestRelease
+		successes <- *discography
 	}
 }
 
-func (f Filterer) findNewReleases(discography *allmusic.Discography, releaseTitles []string) []allmusic.Album {
-	newestReleases := make([]allmusic.Album, 0, len(releaseTitles))
+func (f Filterer) findNewRelease(discography *allmusic.Discography, releaseTitle string) *allmusic.Album {
 	for _, album := range discography.Albums {
-		if inArray(album.Title, releaseTitles) {
-			newestReleases = append(newestReleases, album) //ensure we've selected the right one, just to be safe. Sometimes they aren't sorted properly
+		if album.Title == releaseTitle {
+			return &album //ensure we've selected the right one, just to be safe. Sometimes they aren't sorted properly
 		}
 	}
 
-	return newestReleases
+	return nil
 }
 
 func (f Filterer) artistHasInterestingGenre(genres []string) bool {

@@ -48,7 +48,7 @@ func (rc ReleasesClient) GetPotentiallyInterestingNewReleases(url string) ([]New
 		return nil, err
 	}
 
-	newReleaseSet := make(map[string]*NewRelease, 0) //used for deduplication
+	newReleases := make([]NewRelease, 0)
 
 	// Find the new releases
 	doc.Find(".all-new-releases tr[data-type-filter=\"NEW\"]").Each(func(i int, s *goquery.Selection) {
@@ -71,20 +71,11 @@ func (rc ReleasesClient) GetPotentiallyInterestingNewReleases(url string) ([]New
 		bandLink, _ := band.Attr("href")
 		bandLink = bandLink + "/discography"
 
-		if _, ok := newReleaseSet[bandLink]; !ok {
-			newReleaseSet[bandLink] = &NewRelease{
-				ArtistLink:    bandLink + "/discography",
-				NewAlbumTitles: []string{},
-			}
-		}
-		newReleaseSet[bandLink].NewAlbumTitles = append(newReleaseSet[bandLink].NewAlbumTitles, album)
+		newReleases = append(newReleases, NewRelease{
+			ArtistLink:    bandLink + "/discography",
+			NewAlbumTitle: album,
+		})
 	})
-
-	//turn the map into a list
-	newReleases := make([]NewRelease, 0, len(newReleaseSet))
-	for _, r := range newReleaseSet {
-		newReleases = append(newReleases, *r)
-	}
 
 	return newReleases, nil
 }

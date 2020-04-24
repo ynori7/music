@@ -25,5 +25,5 @@ type Discography struct {
 
 type NewRelease struct {
 	ArtistLink     string
-	NewAlbumTitles []string
+	NewAlbumTitle  string
 }

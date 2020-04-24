@@ -28,5 +28,5 @@ func Test_GetNewReleases(t *testing.T) {
 
 	//then
 	require.NoError(t, err, "There was an error getting the releases")
-	assert.Equal(t, 358, len(releases))
+	assert.Equal(t, 399, len(releases))
 }
