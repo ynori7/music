@@ -1,11 +1,12 @@
 package main
 
 import (
+	"io/ioutil"
+
 	log "github.com/sirupsen/logrus"
 	"github.com/ynori7/music/config"
 	"github.com/ynori7/music/email"
 	"github.com/ynori7/music/newreleases"
-	"io/ioutil"
 )
 
 func main() {

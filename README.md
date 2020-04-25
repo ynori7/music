@@ -9,6 +9,10 @@ The new releases command gathers information about new releases from Allmusic ba
 the configured genres, and for each one checks if it's interesting based on sub-genres
 and ratings. It can then generate an HTML report which is sent by email.
 
+**Additional Details:**
+- Artists whose best rating isn't at least 4 stars will be filtered out
+- Emails are sent using Mailjet
+
 **Usage:**
 
 ```

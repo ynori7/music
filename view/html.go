@@ -71,7 +71,10 @@ const htmlTemplate = `<html>
 		text-decoration:none;color:#000;font-weight:normal;width:100%;
 	}
 	p.score {
-		font-size:10pt;line-height:14.5pt;margin:10px 0 20px;
+		font-size:8pt;line-height:14.5pt;margin:10px 0 20px;
+	}
+	.coverImage {
+		width:192px;
 	}
 	</style>
 </head>
@@ -88,7 +91,7 @@ const htmlTemplate = `<html>
 					{{ if eq $i 0 }}<tr>{{ else if mod $i 3 }}</tr><tr>{{ else }}<td width="2%" align="center" valign="top">&nbsp;</td>{{ end }}
 					<td width="32%" align="left" valign="top">
                     	<a href="{{ $val.NewestRelease.Link }}">
-                        	<img style="width:100%" src="{{ coverImage $val.NewestRelease.Image }}"><br>
+                        	<img class="coverImage" src="{{ coverImage $val.NewestRelease.Image }}"><br>
                         </a>
                         <h3 class="artist">
                         	<a href="{{ $val.Artist.Link }}">{{ $val.Artist.Name }}</a>
