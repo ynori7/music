@@ -86,6 +86,10 @@ func (dc DiscographyClient) GetArtistDiscography(link string) (*Discography, err
 		discography.Albums = append(discography.Albums, album)
 	})
 
+	if len(discography.Albums) == 0 {
+		return nil, fmt.Errorf("artist has no albums")
+	}
+
 	// Find newest release by iterating the list backwards.
 	discography.NewestRelease = discography.Albums[len(discography.Albums)-1] // Sometimes the newest album won't have a year yet, so we use the last item by default
 	for i := len(discography.Albums) - 1; i >= 0; i-- {
@@ -117,7 +121,7 @@ func getEditorRating(s *goquery.Selection) int {
 }
 
 func calculateScore(bestRating, averageRating, ratingCount, newestAlbumRating int) int {
-	score := bestRating * 4 //40% of the score is from the best rating (gives some extra weight to the average)
+	score := bestRating * 4    //40% of the score is from the best rating (gives some extra weight to the average)
 	score += averageRating * 4 //another 40% is from the average rating
 
 	if newestAlbumRating >= 8 {
@@ -126,10 +130,14 @@ func calculateScore(bestRating, averageRating, ratingCount, newestAlbumRating in
 
 	//add a little extra weight based on the total number of ratings there were
 	switch {
-	case ratingCount > 7: score += 20
-	case ratingCount > 5: score += 15
-	case ratingCount > 2: score += 10
-	case ratingCount > 1: score += 5
+	case ratingCount > 7:
+		score += 20
+	case ratingCount > 5:
+		score += 15
+	case ratingCount > 2:
+		score += 10
+	case ratingCount > 1:
+		score += 5
 	}
 
 	return score
