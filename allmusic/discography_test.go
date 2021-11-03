@@ -27,7 +27,8 @@ func Test_GetArtistDiscography_KingDiamond(t *testing.T) {
 	//then
 	require.NoError(t, err, "There was an error getting the discography")
 	assert.Equal(t, "King Diamond", discography.Artist.Name)
-	assert.Equal(t, 18, len(discography.Albums))
+	assert.Equal(t, 17, len(discography.Albums))
+	assert.Equal(t, "https://rovimusic.rovicorp.com/image.jpg?c=fGwYdlDmR9-V_0hsFevyBN_M69_UI9rrJSVvWL2-yAg=&f=2", discography.Albums[0].Image)
 	assert.Equal(t, 9, discography.BestRating)
 }
 

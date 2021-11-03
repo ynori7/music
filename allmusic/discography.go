@@ -67,7 +67,7 @@ func (dc DiscographyClient) GetArtistDiscography(link string) (*Discography, err
 			album.Link = BaseUrl + strings.TrimSpace(link)
 		}
 		coverImg := cover.Find("img")
-		if img, ok := coverImg.Attr("data-original"); ok {
+		if img, ok := coverImg.Attr("src"); ok {
 			album.Image = strings.TrimSpace(img)
 		}
 
