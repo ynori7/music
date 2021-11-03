@@ -31,7 +31,7 @@ Be sure to first copy `config.yaml.dist` to `config.yaml` and fill in the missin
 
 First, build the binary:
 ```
-go build cmd/newreleases/main.go -o newreleasesmailer
+go build -o newreleasesmailer cmd/newreleases/main.go
 ```
 
 Then set up the cronjob:
