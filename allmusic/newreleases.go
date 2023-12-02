@@ -51,7 +51,7 @@ func (rc ReleasesClient) GetPotentiallyInterestingNewReleases(url string) ([]New
 	newReleases := make([]NewRelease, 0)
 
 	// Find the new releases
-	doc.Find(".all-new-releases tr[data-type-filter=\"NEW\"]").Each(func(i int, s *goquery.Selection) {
+	doc.Find("#nrTable tr[data-type-filter=\"NEW\"]").Each(func(i int, s *goquery.Selection) {
 		genre := s.Find(".genre a").Text()
 		if !rc.conf.IsInterestingMainGenre(genre) {
 			return
