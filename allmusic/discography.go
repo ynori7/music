@@ -24,8 +24,18 @@ func NewDiscographyClient() DiscographyClient {
 }
 
 func (dc DiscographyClient) GetArtistDiscography(link string) (*Discography, error) {
-	// Request the HTML page.
-	res, err := dc.httpClient.Get(link)
+	discography, err := dc.lookupBasicInfo(link)
+	if err != nil {
+		return nil, err
+	}
+
+	// Request the discography
+	req, err := http.NewRequest(http.MethodGet, link+"/discographyAjax", nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Referer", link)
+	res, err := dc.httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -40,24 +50,13 @@ func (dc DiscographyClient) GetArtistDiscography(link string) (*Discography, err
 		return nil, err
 	}
 
-	discography := new(Discography)
-
-	discography.Artist.Link = link
-	discography.Artist.Name = strings.TrimSpace(doc.Find(".artist-name").First().Text())
-
-	doc.Find(".basic-info .styles a").Each(func(i int, s *goquery.Selection) {
-		if genre := strings.TrimSpace(s.Text()); genre != "" {
-			discography.Artist.Genres = append(discography.Artist.Genres, strings.TrimSpace(s.Text()))
-		}
-	})
-
 	// Scan the discography
 	ratingCount := 0
 	ratingSum := 0
-	doc.Find(".discography tr").Each(func(i int, s *goquery.Selection) {
+	doc.Find("#discography tr").Each(func(i int, s *goquery.Selection) {
 		album := Album{}
 
-		album.Title = strings.TrimSpace(s.Find("td.title a").Text())
+		album.Title = strings.TrimSpace(s.Find("td.meta a").First().Text())
 		if album.Title == "" {
 			return //this was probably the sort row at the top
 		}
@@ -73,7 +72,7 @@ func (dc DiscographyClient) GetArtistDiscography(link string) (*Discography, err
 
 		album.Year = strings.TrimSpace(s.Find("td.year").Text())
 
-		album.Rating = getEditorRating(s.Find("td.all-rating"))
+		album.Rating = getEditorRating(s.Find("td.musicRating"))
 
 		if album.Rating > discography.BestRating {
 			discography.BestRating = album.Rating
@@ -108,8 +107,39 @@ func (dc DiscographyClient) GetArtistDiscography(link string) (*Discography, err
 	return discography, nil
 }
 
+func (dc DiscographyClient) lookupBasicInfo(link string) (*Discography, error) {
+	// Request the HTML page.
+	res, err := dc.httpClient.Get(link)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+	if res.StatusCode != 200 {
+		return nil, fmt.Errorf("status code error: %d %s", res.StatusCode, res.Status)
+	}
+
+	// Load the HTML document
+	doc, err := goquery.NewDocumentFromReader(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	discography := new(Discography)
+
+	discography.Artist.Link = link
+	discography.Artist.Name = strings.TrimSpace(doc.Find("#artistName").First().Text())
+
+	doc.Find("#basicInfoMeta .styles a").Each(func(i int, s *goquery.Selection) {
+		if genre := strings.TrimSpace(s.Text()); genre != "" {
+			discography.Artist.Genres = append(discography.Artist.Genres, strings.TrimSpace(s.Text()))
+		}
+	})
+
+	return discography, nil
+}
+
 func getEditorRating(s *goquery.Selection) int {
-	ratingVal, _ := s.Attr("data-sort-value")
+	ratingVal, _ := s.Attr("data-text")
 	ratingInt := 0
 	if len(ratingVal) > 0 {
 		ratingInt, _ = strconv.Atoi(string(ratingVal[0]))

@@ -12,10 +12,21 @@ import (
 
 func Test_GetArtistDiscography_KingDiamond(t *testing.T) {
 	//given
+	reqCount := 0
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		dat, err := ioutil.ReadFile("testdata/king-diamond.html")
-		require.NoError(t, err, "There was an error reading the test data file")
-		rw.Write(dat)
+		if reqCount == 0 {
+			dat, err := ioutil.ReadFile("testdata/king-diamond.html")
+			require.NoError(t, err, "There was an error reading the test data file")
+			rw.Write(dat)
+			reqCount++
+		} else if reqCount == 1 {
+			dat, err := ioutil.ReadFile("testdata/king-diamond-ajax.html")
+			require.NoError(t, err, "There was an error reading the test data file")
+			rw.Write(dat)
+			reqCount++
+		} else {
+			t.Errorf("Unexpected request")
+		}
 	}))
 	defer server.Close()
 
@@ -27,7 +38,7 @@ func Test_GetArtistDiscography_KingDiamond(t *testing.T) {
 	//then
 	require.NoError(t, err, "There was an error getting the discography")
 	assert.Equal(t, "King Diamond", discography.Artist.Name)
-	assert.Equal(t, 17, len(discography.Albums))
+	assert.Equal(t, 18, len(discography.Albums))
 	assert.Equal(t, "https://rovimusic.rovicorp.com/image.jpg?c=fGwYdlDmR9-V_0hsFevyBN_M69_UI9rrJSVvWL2-yAg=&f=2", discography.Albums[0].Image)
 	assert.Equal(t, 9, discography.BestRating)
 }

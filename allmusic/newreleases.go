@@ -69,7 +69,6 @@ func (rc ReleasesClient) GetPotentiallyInterestingNewReleases(url string) ([]New
 			return //sometimes there is no artist page
 		}
 		bandLink, _ := band.Attr("href")
-		bandLink = bandLink + "/discography"
 
 		newReleases = append(newReleases, NewRelease{
 			ArtistLink:    bandLink,
