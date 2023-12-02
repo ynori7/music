@@ -72,7 +72,7 @@ func (rc ReleasesClient) GetPotentiallyInterestingNewReleases(url string) ([]New
 		bandLink = bandLink + "/discography"
 
 		newReleases = append(newReleases, NewRelease{
-			ArtistLink:    bandLink + "/discography",
+			ArtistLink:    bandLink,
 			NewAlbumTitle: album,
 		})
 	})
