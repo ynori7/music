@@ -26,9 +26,9 @@ func (h HtmlTemplate) ExecuteHtmlTemplate() (string, error) {
 			"allmusicRating": func(r int) string {
 				switch r {
 				case 0, 1:
-					return "https://fastly-gce.allmusic.com/images/rating/allmusic-0.svg"
+					return "https://fastly-gce.allmusic.com/images/newsletter/allmusic-0.png"
 				default:
-					return fmt.Sprintf("https://fastly-gce.allmusic.com/images/rating/allmusic-%d.svg", r-1)
+					return fmt.Sprintf("https://fastly-gce.allmusic.com/images/newsletter/allmusic-%d.png", r-1)
 				}
 			},
 			"coverImage": func(s string) string {
