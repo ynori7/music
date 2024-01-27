@@ -33,7 +33,7 @@ func (h HtmlTemplate) ExecuteHtmlTemplate() (string, error) {
 			},
 			"coverImage": func(s string) string {
 				if len(s) == 0 {
-					return "https://cdn-gce.allmusic.com/images/no_image/album_300x300.png"
+					return "https://fastly-gce.allmusic.com/images/no_image/album_300x300.png"
 				}
 				return s
 			},

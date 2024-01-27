@@ -13,13 +13,13 @@ const newReleasesUrl = "https://www.allmusic.com/newreleases/all"
 
 type ReleasesClient struct {
 	httpClient *http.Client
-	conf config.Config
+	conf       config.Config
 }
 
 func NewReleasesClient(conf config.Config) ReleasesClient {
 	return ReleasesClient{
 		httpClient: &http.Client{},
-		conf: conf,
+		conf:       conf,
 	}
 }
 

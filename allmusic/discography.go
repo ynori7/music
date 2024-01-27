@@ -68,6 +68,8 @@ func (dc DiscographyClient) GetArtistDiscography(link string) (*Discography, err
 		coverImg := cover.Find("img")
 		if img, ok := coverImg.Attr("src"); ok {
 			album.Image = strings.TrimSpace(img)
+		} else if img, ok := coverImg.Attr("data-src"); ok {
+			album.Image = strings.TrimSpace(img)
 		}
 
 		album.Year = strings.TrimSpace(s.Find("td.year").Text())

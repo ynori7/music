@@ -9,15 +9,15 @@ import (
 func Test_getSubjectLine(t *testing.T) {
 	testcases := map[string]struct {
 		ReleaseWeek string
-		Expected string
+		Expected    string
 	}{
 		"No release week": {
 			ReleaseWeek: "",
-			Expected: "Newest releases from the week of " + time.Now().Format("2006-01-02"),
+			Expected:    "Newest releases from the week of " + time.Now().Format("2006-01-02"),
 		},
 		"With release week": {
 			ReleaseWeek: "20200327",
-			Expected: "Newest releases from the week of 2020-03-27",
+			Expected:    "Newest releases from the week of 2020-03-27",
 		},
 	}
 
