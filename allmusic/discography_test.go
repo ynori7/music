@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/ynori7/hulksmash/anonymizer"
+	hulkhttp "github.com/ynori7/hulksmash/http"
 )
 
 func Test_GetArtistDiscography_KingDiamond(t *testing.T) {
@@ -32,7 +33,7 @@ func Test_GetArtistDiscography_KingDiamond(t *testing.T) {
 	defer server.Close()
 
 	dicographyClient := DiscographyClient{
-		httpClient:    server.Client(),
+		httpClient:    hulkhttp.NewClientV2ForTests(server.Client().Transport),
 		reqAnonymizer: anonymizer.New(12345),
 	}
 

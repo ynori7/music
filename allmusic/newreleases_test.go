@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/ynori7/hulksmash/anonymizer"
+	hulkhttp "github.com/ynori7/hulksmash/http"
 	"github.com/ynori7/music/config"
 )
 
@@ -23,7 +24,7 @@ func Test_GetNewReleases(t *testing.T) {
 
 	conf := config.Config{MainGenres: []string{"Rock", "Rap"}}
 	newReleasesClient := ReleasesClient{
-		httpClient:    server.Client(),
+		httpClient:    hulkhttp.NewClientV2ForTests(server.Client().Transport),
 		conf:          conf,
 		reqAnonymizer: anonymizer.New(12345),
 	}

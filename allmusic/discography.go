@@ -17,13 +17,13 @@ import (
 const BaseUrl = "https://www.allmusic.com"
 
 type DiscographyClient struct {
-	httpClient    *http.Client
+	httpClient    *hulkhttp.ClientV2
 	reqAnonymizer anonymizer.Anonymizer
 }
 
 func NewDiscographyClient() DiscographyClient {
 	return DiscographyClient{
-		httpClient:    hulkhttp.NewClient(),
+		httpClient:    hulkhttp.NewClientV2(),
 		reqAnonymizer: anonymizer.New(int64(rand.Int())),
 	}
 }

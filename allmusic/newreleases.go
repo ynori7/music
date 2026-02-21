@@ -35,14 +35,14 @@ type artist struct {
 }
 
 type ReleasesClient struct {
-	httpClient    *http.Client
+	httpClient    *hulkhttp.ClientV2
 	conf          config.Config
 	reqAnonymizer anonymizer.Anonymizer
 }
 
 func NewReleasesClient(conf config.Config) ReleasesClient {
 	return ReleasesClient{
-		httpClient:    hulkhttp.NewClient(),
+		httpClient:    hulkhttp.NewClientV2(),
 		conf:          conf,
 		reqAnonymizer: anonymizer.New(int64(rand.Int())),
 	}
