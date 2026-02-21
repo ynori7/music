@@ -1,7 +1,7 @@
 package email
 
 import (
-	"github.com/mailjet/mailjet-apiv3-go"
+	"github.com/mailjet/mailjet-apiv3-go/v4"
 	"github.com/ynori7/music/config"
 )
 

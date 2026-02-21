@@ -1,9 +1,9 @@
 package allmusic
 
 import (
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -14,7 +14,7 @@ import (
 func Test_GetNewReleases(t *testing.T) {
 	//given
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		dat, err := ioutil.ReadFile("testdata/newreleases.html")
+		dat, err := os.ReadFile("testdata/newreleases.html")
 		require.NoError(t, err, "There was an error reading the test data file")
 		rw.Write(dat)
 	}))

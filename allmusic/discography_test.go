@@ -1,9 +1,9 @@
 package allmusic
 
 import (
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,12 +15,12 @@ func Test_GetArtistDiscography_KingDiamond(t *testing.T) {
 	reqCount := 0
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		if reqCount == 0 {
-			dat, err := ioutil.ReadFile("testdata/king-diamond.html")
+			dat, err := os.ReadFile("testdata/king-diamond.html")
 			require.NoError(t, err, "There was an error reading the test data file")
 			rw.Write(dat)
 			reqCount++
 		} else if reqCount == 1 {
-			dat, err := ioutil.ReadFile("testdata/king-diamond-ajax.html")
+			dat, err := os.ReadFile("testdata/king-diamond-ajax.html")
 			require.NoError(t, err, "There was an error reading the test data file")
 			rw.Write(dat)
 			reqCount++

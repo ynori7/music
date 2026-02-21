@@ -1,7 +1,7 @@
 package main
 
 import (
-	"io/ioutil"
+	"os"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/ynori7/music/config"
@@ -23,7 +23,7 @@ func main() {
 	}
 
 	//Get the config
-	data, err := ioutil.ReadFile(config.CliConf.ConfigFile)
+	data, err := os.ReadFile(config.CliConf.ConfigFile)
 	if err != nil {
 		logger.WithFields(log.Fields{"error": err}).Fatal("Error reading config file")
 	}
