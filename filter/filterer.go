@@ -1,6 +1,7 @@
 package filter
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sort"
@@ -32,7 +33,7 @@ func (f Filterer) FilterAndEnrich() []allmusic.Discography {
 	discographies := make([]allmusic.Discography, 0)
 
 	//Set up worker pool
-	workerPool := workerpool.NewWorkerPool(5,
+	workerPool := workerpool.NewWorkerPool(
 		func(result interface{}) {
 			r := result.(allmusic.Discography)
 			logger.WithFields(log.Fields{"Artist": r.Artist.Name}).Debug("Found interesting artist")
@@ -51,7 +52,7 @@ func (f Filterer) FilterAndEnrich() []allmusic.Discography {
 	)
 
 	//Do the work
-	if err := workerPool.Work(f.potentialReleases); err != nil {
+	if err := workerPool.Work(context.Background(), 5, f.potentialReleases); err != nil {
 		logger.WithFields(log.Fields{"error": err}).Error("Error processing jobs")
 	}
 

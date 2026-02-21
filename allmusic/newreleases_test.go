@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/ynori7/hulksmash/anonymizer"
 	"github.com/ynori7/music/config"
 )
 
@@ -21,12 +22,16 @@ func Test_GetNewReleases(t *testing.T) {
 	defer server.Close()
 
 	conf := config.Config{MainGenres: []string{"Rock", "Rap"}}
-	newReleasesClient := ReleasesClient{httpClient: server.Client(), conf: conf}
+	newReleasesClient := ReleasesClient{
+		httpClient:    server.Client(),
+		conf:          conf,
+		reqAnonymizer: anonymizer.New(12345),
+	}
 
 	//when
 	releases, err := newReleasesClient.GetPotentiallyInterestingNewReleases(server.URL)
 
 	//then
 	require.NoError(t, err, "There was an error getting the releases")
-	assert.Equal(t, 310, len(releases))
+	assert.Equal(t, 89, len(releases))
 }

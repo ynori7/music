@@ -3,23 +3,28 @@ package allmusic
 import (
 	"fmt"
 	"math"
+	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/ynori7/hulksmash/anonymizer"
+	hulkhttp "github.com/ynori7/hulksmash/http"
 )
 
 const BaseUrl = "https://www.allmusic.com"
 
 type DiscographyClient struct {
-	httpClient *http.Client
+	httpClient    *http.Client
+	reqAnonymizer anonymizer.Anonymizer
 }
 
 func NewDiscographyClient() DiscographyClient {
 	return DiscographyClient{
-		httpClient: &http.Client{},
+		httpClient:    hulkhttp.NewClient(),
+		reqAnonymizer: anonymizer.New(int64(rand.Int())),
 	}
 }
 
@@ -35,6 +40,7 @@ func (dc DiscographyClient) GetArtistDiscography(link string) (*Discography, err
 		return nil, err
 	}
 	req.Header.Set("Referer", link)
+	dc.reqAnonymizer.AnonymizeRequest(req)
 	res, err := dc.httpClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -111,7 +117,12 @@ func (dc DiscographyClient) GetArtistDiscography(link string) (*Discography, err
 
 func (dc DiscographyClient) lookupBasicInfo(link string) (*Discography, error) {
 	// Request the HTML page.
-	res, err := dc.httpClient.Get(link)
+	req, err := http.NewRequest(http.MethodGet, link, nil)
+	if err != nil {
+		return nil, err
+	}
+	dc.reqAnonymizer.AnonymizeRequest(req)
+	res, err := dc.httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +140,9 @@ func (dc DiscographyClient) lookupBasicInfo(link string) (*Discography, error) {
 	discography := new(Discography)
 
 	discography.Artist.Link = link
-	discography.Artist.Name = strings.TrimSpace(doc.Find("#artistName").First().Text())
+	artistNameNode := doc.Find("#artistName").First()
+	artistNameNode.Find("span").Remove() // Remove child spans (e.g., follower count)
+	discography.Artist.Name = strings.TrimSpace(artistNameNode.Text())
 
 	doc.Find("#basicInfoMeta .styles a").Each(func(i int, s *goquery.Selection) {
 		if genre := strings.TrimSpace(s.Text()); genre != "" {
